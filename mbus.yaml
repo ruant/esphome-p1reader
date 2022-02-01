@@ -1,0 +1,52 @@
+time:
+  - platform: sntp
+    id: my_time
+
+uart:
+  id: uart_bus
+  tx_pin: GPIO17
+  rx_pin: GPIO16
+  baud_rate: 2400
+  
+sensor:
+  - platform: total_daily_energy
+    name: "AMS Daily Energy"
+    unit_of_measurement: kWh
+    accuracy_decimals: 2
+    power_id: ams_kw
+  - platform: custom
+    lambda: |-
+      auto mbus_reader = new MbusReader(id(uart_bus));
+      App.register_component(mbus_reader);
+      return {mbus_reader->wattage_sensor, mbus_reader->reactive_power_sensor, mbus_reader->amperage_sensor, mbus_reader->voltage_sensor, mbus_reader->energy_sensor, mbus_reader->reactive_energy_sensor};
+    
+    sensors:
+    - name: "AMS Wattage"
+      unit_of_measurement: kW
+      accuracy_decimals: 2
+      id: ams_kw
+      filters:
+        - multiply: 0.001
+    - name: "AMS Reactive Power"
+      unit_of_measurement: VAr
+      accuracy_decimals: 0
+      internal: true
+    - name: "AMS Amperage"
+      unit_of_measurement: A
+      accuracy_decimals: 2
+      filters:
+        - multiply: 0.01
+    - name: "AMS Voltage"
+      unit_of_measurement: V
+      accuracy_decimals: 0
+    - name: "AMS Hourly Energy"
+      unit_of_measurement: kWh
+      accuracy_decimals: 2
+      filters:
+        - multiply: 0.001
+    - name: "AMS Hourly Reactive Energy"
+      unit_of_measurement: kVArh
+      accuracy_decimals: 3
+      internal: true
+      filters:
+        - multiply: 0.01
